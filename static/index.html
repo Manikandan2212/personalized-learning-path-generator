@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LearnPath AI — Personalized Learning System</title>
+<link rel="stylesheet" href="/static/css/style.css"></head>
+<body>
+<div id="app">
+  <!-- SIDEBAR -->
+  <nav id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <span class="logo-icon">⚡</span>
+        <span class="logo-text">LearnPath AI</span>
+      </div>
+      <div class="user-pill" id="user-pill">Guest</div>
+    </div>
+    <ul class="nav-links">
+      <li><a href="#" class="nav-link active" data-view="dashboard">
+        <span class="nav-icon">📊</span> Dashboard
+      </a></li>
+      <li><a href="#" class="nav-link" data-view="roadmap">
+        <span class="nav-icon">🗺️</span> My Roadmap
+      </a></li>
+      <li><a href="#" class="nav-link" data-view="chat">
+        <span class="nav-icon">💬</span> Ask AI Tutor
+      </a></li>
+      <li><a href="#" class="nav-link" data-view="topics">
+        <span class="nav-icon">📚</span> Browse Topics
+      </a></li>
+      <li><a href="#" class="nav-link" data-view="metrics">
+        <span class="nav-icon">🔬</span> Observability
+      </a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <div class="agent-status">
+        <span class="dot green"></span>
+        <span>5 Agents Active</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main id="main">
+    <!-- ONBOARDING MODAL -->
+    <div id="onboarding-modal" class="modal-overlay active">
+      <div class="modal">
+        <div class="modal-header">
+          <h2>Welcome to LearnPath AI 🎓</h2>
+          <p>Your personalized AI-powered learning system</p>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Your Name</label>
+            <input type="text" id="onboard-name" placeholder="e.g. Priya" value="Learner">
+          </div>
+          <div class="form-group">
+            <label>What do you want to learn?</label>
+            <input type="text" id="onboard-goal" placeholder="e.g. machine learning, deep learning, web development, python, NLP...">
+          </div>
+          <div class="form-group">
+            <label>Hours available per week: <span id="hours-label">10</span>h</label>
+            <input type="range" id="onboard-hours" min="2" max="40" value="10"
+              oninput="document.getElementById('hours-label').textContent=this.value">
+          </div>
+          <div class="form-group">
+            <label>Topics you already know (optional)</label>
+            <div class="tag-cloud" id="prereq-tags">
+              <span class="tag selectable" data-id="python_intro">Python</span>
+              <span class="tag selectable" data-id="linear_algebra">Linear Algebra</span>
+              <span class="tag selectable" data-id="statistics_basics">Statistics</span>
+              <span class="tag selectable" data-id="html_css">HTML/CSS</span>
+              <span class="tag selectable" data-id="javascript">JavaScript</span>
+              <span class="tag selectable" data-id="calculus">Calculus</span>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary btn-lg" onclick="submitOnboarding()">
+            Generate My Learning Path ⚡
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEWS -->
+    <div id="view-dashboard" class="view active">
+      <div class="view-header">
+        <h1>Dashboard</h1>
+        <button class="btn btn-outline" onclick="loadDashboard()">↻ Refresh</button>
+      </div>
+      <div id="dashboard-content">
+        <div class="loading-state"><div class="spinner"></div><p>Loading dashboard...</p></div>
+      </div>
+    </div>
+
+    <div id="view-roadmap" class="view">
+      <div class="view-header">
+        <h1>My Learning Roadmap</h1>
+        <button class="btn btn-outline" onclick="showView('dashboard'); document.getElementById('onboarding-modal').classList.add('active')">
+          ↺ New Goal
+        </button>
+      </div>
+      <div id="roadmap-content">
+        <div class="empty-state">
+          <p>Generate a roadmap from the Dashboard to see your learning path here.</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="view-chat" class="view">
+      <div class="view-header">
+        <h1>AI Tutor — Ask Anything</h1>
+        <div class="mcp-badge" id="mcp-badge">MCP Context Active</div>
+      </div>
+      <div id="chat-messages"></div>
+      <div class="chat-input-area">
+        <div class="chat-input-row">
+          <input type="text" id="chat-input" placeholder="Ask about any concept in your learning path..."
+            onkeydown="if(event.key==='Enter')sendChat()">
+          <button class="btn btn-primary" onclick="sendChat()">Send ↗</button>
+        </div>
+        <div class="chat-suggestions">
+          <button class="chip" onclick="setChat('What is gradient descent?')">What is gradient descent?</button>
+          <button class="chip" onclick="setChat('How does backpropagation work?')">How does backpropagation work?</button>
+          <button class="chip" onclick="setChat('Explain the attention mechanism')">Explain attention mechanism</button>
+          <button class="chip" onclick="setChat('Why do I need linear algebra for ML?')">Why linear algebra for ML?</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="view-topics" class="view">
+      <div class="view-header">
+        <h1>Browse Topics</h1>
+        <input type="text" id="topic-search" placeholder="Search topics..." oninput="filterTopics(this.value)"
+          style="padding:8px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:var(--bg2)">
+      </div>
+      <div id="topics-content">
+        <div class="loading-state"><div class="spinner"></div><p>Loading topics...</p></div>
+      </div>
+    </div>
+
+    <div id="view-metrics" class="view">
+      <div class="view-header">
+        <h1>🔬 Observability Dashboard</h1>
+        <button class="btn btn-outline" onclick="loadMetrics()">↻ Refresh</button>
+      </div>
+      <div id="metrics-content">
+        <div class="loading-state"><div class="spinner"></div><p>Loading metrics...</p></div>
+      </div>
+    </div>
+
+    <!-- QUIZ MODAL -->
+    <div id="quiz-modal" class="modal-overlay">
+      <div class="modal modal-wide">
+        <div class="modal-header">
+          <h2 id="quiz-title">Quiz</h2>
+          <button class="btn-close" onclick="closeQuiz()">✕</button>
+        </div>
+        <div id="quiz-body"></div>
+      </div>
+    </div>
+
+    <!-- RESOURCES MODAL -->
+    <div id="resources-modal" class="modal-overlay">
+      <div class="modal modal-wide">
+        <div class="modal-header">
+          <h2 id="resources-title">Resources</h2>
+          <button class="btn-close" onclick="closeResources()">✕</button>
+        </div>
+        <div id="resources-body"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="toast" class="toast"></div>
+<script src="/static/js/app.js"></script>
+</body>
+</html>
